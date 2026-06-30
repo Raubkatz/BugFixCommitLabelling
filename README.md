@@ -240,13 +240,7 @@ The `statistical_analysis/` directory contains the complete R scripts used to re
 
 ---
 
-## Requirements
 
-| Component             | Requirement                                                                 |
-| --------------------- | --------------------------------------------------------------------------- |
-| Stage 1 (miner)       | JDK 23 toolchain (auto-provisioned by Gradle if absent).                     |
-| Stage 2 (executer)    | Python 3 (standard library only) + a reachable Ollama instance with the model pulled. |
-| Statistical analysis  | R (with the packages used by the scripts in `statistical_analysis/`).       |
 
 ---
 
@@ -267,3 +261,84 @@ Please note that any included commit messages or source code remain subject to t
 ## Acknowledgements
 
 This repository builds upon publicly available software repositories and benchmark datasets, including SmartSHARK, BugsJS, BugsInPy, and PyBugHive. We gratefully acknowledge the maintainers of these projects and datasets for making their work publicly available.
+
+## Detailed Dependencies & Runtime Environment
+
+This section expands the **Requirements** table above with exact versions, package lists, and install commands, so the full pipeline can be reproduced end to end from this information alone.
+
+### Operating System
+
+All three components are platform-independent and run on 64-bit **Linux, macOS, and Windows**:
+
+- **Stage 1 (miner)** ships both `gradlew` (Linux/macOS shells) and `gradlew.bat` (Windows); only a JVM is required on the host.
+- **Stage 2 (executer)** and the **R analysis** are pure scripts with no OS-specific code.
+- **Ollama** (the inference backend used by Stage 2) provides native builds for Linux, macOS, and Windows. A CUDA-capable GPU is optional but speeds up inference; CPU-only also works.
+
+### Stage 1 — Commit Prompt Miner (Kotlin / JVM)
+
+| Component            | Version / Requirement                                                 |
+| -------------------- | --------------------------------------------------------------------- |
+| JDK (toolchain)      | **Java 23** — auto-provisioned by Gradle if absent (e.g. Temurin 23)  |
+| Kotlin               | **2.1.10** (`kotlin("jvm")` + `kotlin("plugin.serialization")`)       |
+| JVM bytecode target  | **23**                                                                |
+| Build tool           | Gradle via the bundled wrapper (`./gradlew`) — no separate install    |
+| Shadow (fat-jar) plugin | `com.gradleup.shadow` **8.3.5**                                    |
+
+Libraries (resolved from Maven Central at build time):
+
+- `org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2`
+- `com.github.ajalt.clikt:clikt:4.2.1`
+- `org.apache.commons:commons-csv:1.12.0`
+- `com.londogard:nlp:1.2.0`  *(keyword/stemming baseline)*
+- `org.eclipse.jgit:org.eclipse.jgit:6.10.0.202406032230-r`
+
+Network access is needed only at build time (dependency download); running the jar is fully offline.
+
+### Stage 2 — Commit Classification Prompt Executer (Python)
+
+| Component             | Version / Requirement                                                                   |
+| --------------------- | --------------------------------------------------------------------------------------- |
+| Python                | **3.6+** (uses f-strings; all other features are 3.3+). 3.8+ recommended.               |
+| Third-party packages  | **None** — standard library only                                                        |
+| Stdlib modules used   | `argparse`, `csv`, `json`, `os`, `re`, `sys`, `time`, `urllib.request`, `urllib.error`  |
+
+Runtime service (not a Python package): a running **Ollama** instance reachable at `--base-url` (default `http://localhost:11434`) with the target model pulled, e.g.:
+
+```bash
+ollama pull qwen3.5:9b
+```
+
+No `pip install` step is required for the script itself.
+
+### Statistical Analysis (R)
+
+**R version:** the script does not pin a version internally; use a recent **R ≥ 4.0** (e.g. 4.4.x). *(The `ver3_6_1` in the filename is the analysis script's own revision number, not an R version.)*
+
+R packages used by `analysis_anonym_ver3_6_1.r`:
+
+| Package        | Purpose                                   | Install source                                      |
+| -------------- | ----------------------------------------- | --------------------------------------------------- |
+| `dplyr`        | data wrangling                            | CRAN                                                |
+| `tidyr`        | reshaping (`gather` / `spread` / `separate`) | CRAN                                             |
+| `ggplot2`      | per-repository F1 heatmaps                | CRAN                                                |
+| `ModelMetrics` | precision / recall / F1                    | CRAN                                                |
+| `PMCMR`        | `posthoc.friedman.nemenyi.test`           | CRAN (deprecated; successor `PMCMRplus`)            |
+| `scmamp`       | `plotCD` critical-difference diagram      | **GitHub** `b0rxa/scmamp` (no longer on main CRAN)  |
+
+Install commands:
+
+```r
+# Core CRAN packages (incl. the still-available but deprecated PMCMR)
+install.packages(c("dplyr", "tidyr", "ggplot2", "ModelMetrics", "PMCMR"))
+
+# scmamp is no longer in the main CRAN repository -> install from GitHub
+install.packages("remotes")
+remotes::install_github("b0rxa/scmamp")
+
+# Optional: some scmamp plotting helpers pull in Rgraphviz (Bioconductor)
+# install.packages("BiocManager"); BiocManager::install("Rgraphviz")
+```
+
+`PMCMR`'s `posthoc.friedman.nemenyi.test` is deprecated; on a newer setup the equivalent in `PMCMRplus` is `frdAllPairsNemenyiTest(mat)`.
+
+Before running, set `setwd("…")` to the directory holding the combined predictions CSV (e.g. `1-mined-combined.csv`). That CSV is expected to contain the columns `dataset`, `repo`, `is_bugfix`, followed by one boolean predictor column per model (plus `stemming`).
