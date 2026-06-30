@@ -25,9 +25,7 @@ Because every analyzed commit references its original repository and exact commi
 │   │   ├── gradlew / gradlew.bat
 │   │   └── src/…                 # package org.anonymous.commitminer
 │   └── commit_classification_prompt_executer.py   # Stage 2 — Python: run prompts via Ollama, fold into CSV
-├── prompts/                      # Prompt templates used for LLM labelling
 ├── statistical_analysis/         # R scripts (accuracy, F1, Friedman, Nemenyi, CD diagrams)
-├── results/                      # Generated prediction results (optional)
 ├── LICENSE                       # Apache License 2.0 (code)
 ├── DATA_LICENSE                  # CC BY 4.0 (dataset)
 └── README.md
