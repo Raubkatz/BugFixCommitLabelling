@@ -1,6 +1,6 @@
 # Bug-Fixing Commit Labelling Dataset
 
-This repository accompanies the paper **"Labelling Bug-Fixing Commits with Open-Weight Language Models: A Reproducible Alternative to Keyword and Issue-Tracker Heuristics."** It provides the datasets, scripts, prompts, and statistical analyses required to reproduce the experiments and to build new bug-fixing commit datasets using open-weight language models.
+This repository accompanies the article **"Labelling Bug-Fixing Commits with Local Open-Weight Language Models"**. It provides the datasets, scripts, prompts, and statistical analyses required to reproduce the experiments and to build new bug-fixing commit datasets using open-weight language models.
 
 The labelling pipeline ships as two small, self-contained programs that chain together:
 
