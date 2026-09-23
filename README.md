@@ -1,6 +1,6 @@
 # Bug-Fixing Commit Labelling Dataset
 
-This repository accompanies the article **"Labelling Bug-Fixing Commits with Local Open-Weight Language Models"**. It provides the datasets, scripts, prompts, and statistical analyses required to reproduce the experiments and to build new bug-fixing commit datasets using open-weight language models.
+This repository accompanies the article **"Labelling Bug-Fixing Commits with Local Open-Weight Language Models"**. It provides the datasets, scripts, prompts, and statistical analyses required to reproduce the experiments and to build new bug-fixing commit datasets using open-weight language models. This repository is the code and data for the corresponding article: https://doi.org/10.48550/arXiv.2609.21616
 
 The labelling pipeline ships as two small, self-contained programs that chain together:
 
@@ -8,6 +8,9 @@ The labelling pipeline ships as two small, self-contained programs that chain to
 2. **Commit Classification Prompt Executer** (Python, standard library only) — runs the mined prompts through a local open-weight model via [Ollama](https://ollama.com/) and folds the verdicts back into the same CSV, one column per model.
 
 Because every analyzed commit references its original repository and exact commit hash, the entire benchmark is fully reconstructable from upstream Git history.
+
+When using this code or data from this repository pls cite the corresponing article: https://doi.org/10.48550/arXiv.2609.21616
+
 
 ---
 
